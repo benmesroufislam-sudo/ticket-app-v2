@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام إدارة خدمات IT - Helpdesk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Tajawal', sans-serif; } </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+  <header class="bg-slate-900 text-white py-4 shadow-md">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">نظام الدعم الفني وتذاكر IT</h1>
+      <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
+        + تذكرة جديدة
+      </button>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6">
+    <!-- لوحة الأحصائيات -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <span class="text-slate-500 text-sm">إجمالي التذاكر</span>
+        <div id="stat-total" class="text-2xl font-bold text-slate-900">0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <span class="text-slate-500 text-sm">تذاكر جديدة</span>
+        <div id="stat-new" class="text-2xl font-bold text-amber-600">0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <span class="text-slate-500 text-sm">قيد المعالجة</span>
+        <div id="stat-progress" class="text-2xl font-bold text-blue-600">0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <span class="text-slate-500 text-sm">تم حلها / مغلقة</span>
+        <div id="stat-closed" class="text-2xl font-bold text-emerald-600">0</div>
+      </div>
+    </div>
+
+    <!-- جدول التذاكر -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 font-bold bg-slate-50">قائمة التذاكر الحالية</div>
+      <table class="w-full text-right border-collapse">
+        <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+          <tr>
+            <th class="p-3">#</th>
+            <th class="p-3">العنوان</th>
+            <th class="p-3">المُرسل</th>
+            <th class="p-3">الفئة</th>
+            <th class="p-3">الأولوية</th>
+            <th class="p-3">الحالة</th>
+            <th class="p-3">تاريخ الإنشاء</th>
+            <th class="p-3">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tickets-table" class="divide-y divide-slate-200 text-sm">
+          <!-- يتم إدراج التذاكر هنا عبر JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- نافذة إنشاء تذكرة جديدة -->
+  <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
+      <h2 class="text-lg font-bold mb-4">إنشاء تذكرة جديدة</h2>
+      <form id="create-ticket-form" onsubmit="handleCreateTicket(event)">
+        <div class="mb-3">
+          <label class="block text-sm font-medium mb-1">عنوان الطلب / المشكلة</label>
+          <input type="text" id="title" required class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">الفئة</label>
+            <select id="category" class="w-full border rounded-lg p-2 text-sm">
+              <option value="incident">عطل (Incident)</option>
+              <option value="request">طلب خدمة (Service Request)</option>
+              <option value="problem">مشكلة متكررة (Problem)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">الأولوية</label>
+            <select id="priority" class="w-full border rounded-lg p-2 text-sm">
+              <option value="P1">P1 - حرجة جداً (ساعتان)</option>
+              <option value="P2">P2 - عالية (8 ساعات)</option>
+              <option value="P3" selected>P3 - متوسطة (24 ساعة)</option>
+              <option value="P4">P4 - منخفضة (72 ساعة)</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1">تفاصيل الطلب</label>
+          <textarea id="description" rows="4" required class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm">إلغاء</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">حفظ وإرسال</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function loadStats() {
+      const res = await fetch('/api/stats');
+      const data = await res.json();
+      document.getElementById('stat-total').innerText = data.total || 0;
+      document.getElementById('stat-new').innerText = data.new_tickets || 0;
+      document.getElementById('stat-progress').innerText = data.in_progress || 0;
+      document.getElementById('stat-closed').innerText = data.closed || 0;
+    }
+
+    async function loadTickets() {
+      const res = await fetch('/api/tickets');
+      const tickets = await res.json();
+      const tbody = document.getElementById('tickets-table');
+      tbody.innerHTML = tickets.map(t => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold">#${t.id}</td>
+          <td class="p-3 font-medium">${t.title}</td>
+          <td class="p-3 text-slate-600">${t.creator_name || 'غير معروف'}</td>
+          <td class="p-3"><span class="px-2 py-1 bg-slate-100 rounded text-xs">${t.category}</span></td>
+          <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${getPriorityBadge(t.priority)}">${t.priority}</span></td>
+          <td class="p-3">
+            <select onchange="updateStatus(${t.id}, this.value)" class="text-xs border rounded p-1">
+              <option value="new" ${t.status === 'new' ? 'selected' : ''}>جديدة</option>
+              <option value="in_progress" ${t.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
+              <option value="resolved" ${t.status === 'resolved' ? 'selected' : ''}>تم الحل</option>
+              <option value="closed" ${t.status === 'closed' ? 'selected' : ''}>مغلقة</option>
+            </select>
+          </td>
+          <td class="p-3 text-slate-500 text-xs">${new Date(t.created_at).toLocaleString('ar-EG')}</td>
+          <td class="p-3">
+            <button onclick="alert('تاريخ استحقاق SLA: ' + '${new Date(t.sla_due_at).toLocaleString('ar-EG')}')" class="text-blue-600 hover:underline text-xs">عرض SLA</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function getPriorityBadge(priority) {
+      if (priority === 'P1') return 'bg-red-100 text-red-700';
+      if (priority === 'P2') return 'bg-orange-100 text-orange-700';
+      if (priority === 'P3') return 'bg-yellow-100 text-yellow-800';
+      return 'bg-slate-100 text-slate-600';
+    }
+
+    async function handleCreateTicket(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        priority: document.getElementById('priority').value,
+        description: document.getElementById('description').value,
+        created_by: 3
+      };
+
+      await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      closeModal();
+      document.getElementById('create-ticket-form').reset();
+      init();
+    }
+
+    async function updateStatus(id, status) {
+      await fetch(`/api/tickets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      init();
+    }
+
+    function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    function init() {
+      loadStats();
+      loadTickets();
+    }
+
+    init();
+  </script>
+</body>
+</html>

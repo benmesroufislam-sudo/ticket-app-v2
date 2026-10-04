@@ -1,0 +1,237 @@
+سأكمل لك باقي قوالب HTML المطلوبة:
+
+### analyze.html (صفحة تحليل الأسواق)
+
+```html
+{% extends "base.html" %}
+
+{% block title %}تحليل الأسواق - تحليل الأسواق الجزائرية{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        margin: 20px 0;
+        text-align: center;
+    }
+    .chart-container img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .analysis-card {
+        transition: transform 0.3s;
+    }
+    .analysis-card:hover {
+        transform: translateY(-5px);
+    }
+    .recommendation-card {
+        border-right: 4px solid #00695c;
+    }
+    .metric-card {
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center">تحليل الأسواق الجزائرية</h2>
+        <p class="text-center">تحليل مفصل للأسواق والمنتجات في الجزائر مع توصيات استراتيجية</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line ms-2"></i>تحليل الأسواق</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="marketAnalysis"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-box ms-2"></i>تحليل المنتجات</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="productAnalysis"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar ms-2"></i>الرسوم البيانية</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="chartsContainer" class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h6>تحليل الأسواق الجزائرية - الطلب مقابل المنافسة</h6>
+                            <img id="marketsChart" src="" alt="رسم بياني للأسواق">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h6>هوامش الربح للمنتجات المختلفة</h6>
+                            <img id="productsChart" src="" alt="رسم بياني للمنتجات">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-lightbulb ms-2"></i>التوصيات</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="recommendations"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-microscope ms-2"></i>التحليل المتقدم</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="advancedAnalysis"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadMarketAnalysis();
+    loadProductAnalysis();
+    loadCharts();
+    loadRecommendations();
+    loadAdvancedAnalysis();
+});
+
+function loadMarketAnalysis() {
+    showLoading();
+    $.ajax({
+        url: '/api/analyze',
+        type: 'GET',
+        success: function(data) {
+            let html = '<div class="table-responsive"><table class="table table-striped">';
+            html += '<thead><tr><th>السوق</th><th>الطلب</th><th>المنافسة</th><th>هامش الربح</th><th>درجة الربح</th></tr></thead><tbody>';
+            
+            Object.entries(data.markets).forEach(([market, info]) => {
+                let profitClass = info.profit_score > 0.6 ? 'profit-high' : 
+                                 info.profit_score > 0.3 ? 'profit-medium' : 'profit-low';
+                
+                html += `
+                    <tr>
+                        <td>${market}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: ${info.data.الطلب}%">${info.data.الطلب}%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-warning" style="width: ${info.data.المنافسة}%">${info.data.المنافسة}%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-info" style="width: ${info.data['هامش الربح']}%">${info.data['هامش الربح']}%</div>
+                            </div>
+                        </td>
+                        <td><span class="profit-score ${profitClass}">${(info.profit_score * 100).toFixed(1)}%</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            $('#marketAnalysis').html(html);
+            hideLoading();
+        },
+        error: function() {
+            $('#marketAnalysis').html('<div class="alert alert-danger">حدث خطأ أثناء تحميل بيانات الأسواق</div>');
+            hideLoading();
+        }
+    });
+}
+
+function loadProductAnalysis() {
+    showLoading();
+    $.ajax({
+        url: '/api/analyze',
+        type: 'GET',
+        success: function(data) {
+            let html = '<div class="table-responsive"><table class="table table-striped">';
+            html += '<thead><tr><th>المنتج</th><th>الطلب</th><th>المنافسة</th><th>هامش الربح</th><th>المخزون</th><th>درجة الربح</th></tr></thead><tbody>';
+            
+            Object.entries(data.products).forEach(([product, info]) => {
+                let profitClass = info.profit_score > 0.6 ? 'profit-high' : 
+                                 info.profit_score > 0.3 ? 'profit-medium' : 'profit-low';
+                
+                html += `
+                    <tr>
+                        <td>${product}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: ${info.data.الطلب}%">${info.data.الطلب}%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-warning" style="width: ${info.data.المنافسة}%">${info.data.المنافسة}%</div>
+                            </div>
+                        </td>
+                        <td>
+                      {% endblock %}

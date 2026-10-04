@@ -1,0 +1,215 @@
+
+{% extends "base.html" %}
+
+{% block title %}الرئيسية - تحليل الأسواق الجزائرية{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="jumbotron bg-light p-5 rounded-3">
+            <h1 class="display-4">مرحباً بك في منصة تحليل الأسواق الجزائرية</h1>
+            <p class="lead">منصة متكاملة لتحليل الأسواق والمنتجات في الجزائر، مع إدارة حسابات التواصل الاجتماعي وتنفيذ الحملات الإعلانية.</p>
+            <hr class="my-4">
+            <p>استكشف تحليلاتنا المتقدمة للأسواق الجزائرية واكتشف أفضل الفرص التجارية.</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('analyze') }}" role="button">ابدأ التحليل الآن</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header text-center">
+                <h5><i class="fas fa-chart-line ms-2"></i>تحليل الأسواق</h5>
+            </div>
+            <div class="card-body">
+                <p>احصل على تحليلات مفصلة للأسواق الجزائرية المختلفة، مع بيانات عن الطلب والمنافسة وهوامش الربح.</p>
+                <a href="{{ url_for('analyze') }}" class="btn btn-outline-primary">اذهب إلى التحليل</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header text-center">
+                <h5><i class="fas fa-users ms-2"></i>إدارة الحسابات</h5>
+            </div>
+            <div class="card-body">
+                <p>إدارة حسابات فيسبوك الخاصة بك، مع متابعة الأداء والتفاعل مع المتابعين.</p>
+                <a href="{{ url_for('accounts') }}" class="btn btn-outline-primary">عرض الحسابات</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header text-center">
+                <h5><i class="fas fa-terminal ms-2"></i>تنفيذ الأوامر</h5>
+            </div>
+            <div class="card-body">
+                <p>تنفيذ أوامر مخصصة على حساباتك، مع إمكانية أتمتة العمليات المتكررة.</p>
+                <a href="{{ url_for('commands') }}" class="btn btn-outline-primary">اذهب إلى الأوامر</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar ms-2"></i>نظرة سريعة على الأسواق</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="marketOverview" class="row"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-box ms-2"></i>أفضل المنتجات</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="topProducts"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-lightbulb ms-2"></i>توصيات سريعة</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="quickRecommendations"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadMarketOverview();
+    loadTopProducts();
+    loadQuickRecommendations();
+});
+
+function loadMarketOverview() {
+    showLoading();
+    $.ajax({
+        url: '/api/analyze',
+        type: 'GET',
+        success: function(data) {
+            let html = '';
+            
+            // عرض أفضل 3 أسواق
+            let markets = Object.entries(data.markets).slice(0, 3);
+            
+            markets.forEach(([market, info]) => {
+                let profitClass = info.profit_score > 0.6 ? 'profit-high' : 
+                                 info.profit_score > 0.3 ? 'profit-medium' : 'profit-low';
+                
+                html += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h6>${market}</h6>
+                                <div class="profit-score ${profitClass}">${(info.profit_score * 100).toFixed(1)}%</div>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" style="width: ${info.data.الطلب}%">الطلب: ${info.data.الطلب}%</div>
+                                </div>
+                                <div class="progress mt-1" style="height: 10px;">
+                                    <div class="progress-bar bg-warning" style="width: ${info.data.المنافسة}%">المنافسة: ${info.data.المنافسة}%</div>
+                                </div>
+                                <div class="progress mt-1" style="height: 10px;">
+                                    <div class="progress-bar bg-info" style="width: ${info.data['هامش الربح']}%">هامش الربح: ${info.data['هامش الربح']}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            $('#marketOverview').html(html);
+            hideLoading();
+        },
+        error: function() {
+            $('#marketOverview').html('<div class="alert alert-danger">حدث خطأ أثناء تحميل بيانات الأسواق</div>');
+            hideLoading();
+        }
+    });
+}
+
+function loadTopProducts() {
+    showLoading();
+    $.ajax({
+        url: '/api/analyze',
+        type: 'GET',
+        success: function(data) {
+            let html = '<ul class="list-group">';
+            
+            // عرض أفضل 5 منتجات
+            let products = Object.entries(data.products).slice(0, 5);
+            
+            products.forEach(([product, info]) => {
+                let profitClass = info.profit_score > 0.6 ? 'profit-high' : 
+                                 info.profit_score > 0.3 ? 'profit-medium' : 'profit-low';
+                
+                html += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${product}
+                        <span class="profit-score ${profitClass}">${(info.profit_score * 100).toFixed(1)}%</span>
+                    </li>
+                `;
+            });
+            
+            html += '</ul>';
+            $('#topProducts').html(html);
+            hideLoading();
+        },
+        error: function() {
+            $('#topProducts').html('<div class="alert alert-danger">حدث خطأ أثناء تحميل بيانات المنتجات</div>');
+            hideLoading();
+        }
+    });
+}
+
+function loadQuickRecommendations() {
+    showLoading();
+    $.ajax({
+        url: '/api/recommendations',
+        type: 'GET',
+        success: function(data) {
+            let html = '<ul class="list-group">';
+            
+            data.recommendations.slice(0, 3).forEach(rec => {
+                html += `
+                    <li class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${rec.product} في ${rec.market}</h6>
+                            <span class="profit-score profit-high">${(rec.score * 100).toFixed(1)}%</span>
+                        </div>
+                        <p class="mb-1">توافق: ${rec.compatibility.toFixed(1)}% | إمكانية ربح: ${rec.profit_potential.toFixed(1)}%</p>
+                    </li> 
+                `;
+            });
+             } } 
+             {% endblock %}} 
