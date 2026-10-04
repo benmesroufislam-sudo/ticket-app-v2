@@ -1,7 +1,7 @@
 {
   "name": "it-ticketing-system",
   "version": "1.0.0",
-  "description": "نظام الدعم الفني وتذاكر IT - القرية المتوسطية",
+  "description": "نظام الدعم الفني وتذاكر IT -  المؤسسة العمومية لتسيير القرية المتوسطية",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
