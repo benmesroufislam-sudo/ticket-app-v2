@@ -11,8 +11,27 @@
 <body class="bg-slate-100 text-slate-800">
 
   <header class="bg-slate-900 text-white py-4 shadow-md">
+
+    <!-- حقل اسم الموظف -->
+<div class="form-group mb-3">
+    <label for="created_by" class="form-label">اسم الموظف / المُرسل:</label>
+    <input type="text" id="created_by" name="created_by" class="form-control" placeholder="أدخل اسمك الكامل" required>
+</div>
+
+<!-- حقل المصلحة / القسم -->
+<div class="form-group mb-3">
+    <label for="department" class="form-label">المصلحة / القسم:</label>
+    <select id="department" name="department" class="form-select" required>
+        <option value="">اختر المصلحة...</option>
+        <option value="مصلحة الإعلام الآلي والشبكات">مصلحة الإعلام الآلي والشبكات</option>
+        <option value="مصلحة الوسائل العامة">مصلحة الوسائل العامة</option>
+        <option value="مصلحة الاستقبال والأمن">مصلحة الاستقبال والأمن</option>
+        <option value="الإدارة العامة">الإدارة العامة</option>
+    </select>
+</div>
     <div class="container mx-auto px-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold">نظام الدعم الفني وتذاكر IT</h1>
+      <h1 class="text-xl font-bold">المؤسسة القرية المتوسطية</h1>
+      <h2 class="text-xl font-bold">نظام الدعم الفني وتذاكر IT</h2>
       <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         + تذكرة جديدة
       </button>
