@@ -3,28 +3,23 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const app = express();
-
-// إعداد المنفذ ديناميكياً ليتوافق مع Render والتطوير المحلي
 const PORT = process.env.PORT || 3000;
 
-// Middleware لمعالجة بيانات JSON والنموذج
+// كلمة مرور لوحة التحكم (يمكنك تغييرها من هنا)
+const ADMIN_PASSWORD = "admin"; 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// خدمة الملفات الثابتة (مثل index.html، الصور، والملفات المرفقة)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// الاتصال بقاعدة البيانات SQLite
+// الاتصال بقاعدة البيانات
 const dbPath = path.join(__dirname, 'tickets.db');
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('خطأ في الاتصال بقاعدة البيانات:', err.message);
-    } else {
-        console.log('تم الاتصال بقاعدة البيانات SQLite بنجاح.');
-    }
+    if (err) console.error('خطأ في قاعدة البيانات:', err.message);
+    else console.log('تم الاتصال بقاعدة البيانات SQLite.');
 });
 
-// إنشاء جدول التذاكر إذا لم يكن موجوداً
+// إنشاء الجدول
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS tickets (
@@ -38,45 +33,63 @@ db.serialize(() => {
     `);
 });
 
-// API: جلب جميع التذاكر
-app.get('/api/tickets', (req, res) => {
-    const sql = `SELECT * FROM tickets ORDER BY id DESC`;
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+// API التحقق من كلمة مرور المدير
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true, token: "admin-authenticated-token" });
+    } else {
+        res.status(401).json({ success: false, message: "كلمة المرور غير صحيحة" });
+    }
+});
+
+// API جلب التذاكر (محمية بكلمة المرور)
+app.post('/api/admin/tickets', (req, res) => {
+    const { token } = req.body;
+    if (token !== "admin-authenticated-token") {
+        return res.status(403).json({ error: "غير مصرح لك بالوصول" });
+    }
+    db.all(`SELECT * FROM tickets ORDER BY id DESC`, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
 
-// API: إنشاء تذكرة جديدة (مع التحقق من وجود اسم الموظف والمصلحة)
+// API إنشاء تذكرة جديدة (متاحة للموظفين)
 app.post('/api/tickets', (req, res) => {
     const { title, priority, created_by } = req.body;
-
-    // التحقق من الجانب الخفي لمنع إنشاء تذكرة بدون بيانات الموظف والمصلحة
     if (!created_by || !created_by.trim() || !title || !title.trim()) {
-        return res.status(400).json({ error: 'اسم الموظف، المصلحة، وعنوان المشكلة حقول إجبارية!' });
+        return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
     }
 
     const sql = `INSERT INTO tickets (title, priority, created_by, status, created_at) VALUES (?, ?, ?, 'جديدة', DATETIME('now', 'localtime'))`;
-    
     db.run(sql, [title.trim(), priority || 'P3', created_by.trim()], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.status(201).json({
-            id: this.lastID,
-            message: 'تم إنشاء التذكرة بنجاح'
-        });
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, message: 'تم إرسال التذكرة بنجاح' });
     });
 });
 
-// توجيه الصفحة الرئيسية إلى index.html
+// API تحديث حالة التذكرة
+app.post('/api/admin/tickets/status', (req, res) => {
+    const { token, id, status } = req.body;
+    if (token !== "admin-authenticated-token") {
+        return res.status(403).json({ error: "غير مصرح" });
+    }
+    db.run(`UPDATE tickets SET status = ? WHERE id = ?`, [status, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "تم تحديث الحالة" });
+    });
+});
+
+// توجيه الواجهات
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// تشغيل السيرفر
 app.listen(PORT, () => {
-    console.log(`السيرفر يعمل بنجاح على المنفذ: ${PORT}`);
+    console.log(`السيرفر يعمل على المنفذ: ${PORT}`);
 });

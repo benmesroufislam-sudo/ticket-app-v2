@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة التذاكر</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>#ticketsTable td { color: #000 !important; font-weight: 600; }</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- نافذة تسجيل الدخول للمدير -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <h2 class="text-lg font-bold mb-4 text-slate-800">تسجيل الدخول للوحة التحكم</h2>
+            <input type="password" id="adminPass" placeholder="أدخل كلمة المرور" class="w-full border p-2.5 rounded-lg mb-4 text-center">
+            <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">دخول</button>
+            <p id="loginErr" class="text-red-500 text-xs mt-2 hidden">كلمة المرور غير صحيحة!</p>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم الإدارية -->
+    <div id="adminPanel" class="hidden">
+        <header class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-lg font-bold text-amber-400">المؤسسة العمومية لتسيير القرية المتوسطية</h1>
+                <p class="text-xs text-slate-300">لوحة التحكم والمراقبة الخاصة بالمدير</p>
+            </div>
+            <span class="text-xs text-sky-400 border border-slate-700 p-2 rounded">Eng: BENMESROUF ISLAM</span>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <!-- الإحصائيات -->
+            <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+                <div class="bg-white p-4 rounded-xl border shadow-sm"><span class="text-xs text-slate-500 block">جديدة</span><span id="stNew" class="text-2xl font-bold text-blue-600">0</span></div>
+                <div class="bg-white p-4 rounded-xl border shadow-sm"><span class="text-xs text-slate-500 block">قيد المعالجة</span><span id="stProg" class="text-2xl font-bold text-amber-500">0</span></div>
+                <div class="bg-white p-4 rounded-xl border shadow-sm"><span class="text-xs text-slate-500 block">تم حلها</span><span id="stDone" class="text-2xl font-bold text-green-600">0</span></div>
+            </div>
+
+            <!-- جدول التذاكر -->
+            <div class="bg-white rounded-xl shadow border overflow-x-auto">
+                <table class="w-full text-right min-w-[650px]" id="ticketsTable">
+                    <thead class="bg-slate-50 border-b text-xs text-slate-600">
+                        <tr>
+                            <th class="p-3">المُرسِل (الاسم والمصلحة)</th>
+                            <th class="p-3">المشكلة</th>
+                            <th class="p-3">الأولوية</th>
+                            <th class="p-3">الحالة</th>
+                            <th class="p-3">التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let authToken = "";
+
+        async function login() {
+            const pass = document.getElementById('adminPass').value;
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ password: pass })
+            });
+            const data = await res.json();
+            if (data.success) {
+                authToken = data.token;
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadTickets();
+            } else {
+                document.getElementById('loginErr').classList.remove('hidden');
+            }
+        }
+
+        async function loadTickets() {
+            const res = await fetch('/api/admin/tickets', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ token: authToken })
+            });
+            const tickets = await res.json();
+            
+            let n = 0, p = 0, d = 0;
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+
+            tickets.forEach(t => {
+                if (t.status === 'جديدة') n++;
+                else if (t.status === 'قيد المعالجة') p++;
+                else d++;
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3 font-bold text-black">${t.created_by}</td>
+                        <td class="p-3 text-slate-800">${t.title}</td>
+                        <td class="p-3"><span class="px-2 py-1 text-xs rounded bg-slate-200">${t.priority}</span></td>
+                        <td class="p-3">
+                            <select onchange="updateStatus(${t.id}, this.value)" class="border rounded p-1 text-xs bg-slate-50">
+                                <option value="جديدة" ${t.status === 'جديدة' ? 'selected' : ''}>جديدة</option>
+                                <option value="قيد المعالجة" ${t.status === 'قيد المعالجة' ? 'selected' : ''}>قيد المعالجة</option>
+                                <option value="تم حلها" ${t.status === 'تم حلها' ? 'selected' : ''}>تم حلها</option>
+                            </select>
+                        </td>
+                        <td class="p-3 text-xs text-slate-500">${t.created_at || 'الآن'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('stNew').innerText = n;
+            document.getElementById('stProg').innerText = p;
+            document.getElementById('stDone').innerText = d;
+        }
+
+        async function updateStatus(id, status) {
+            await fetch('/api/admin/tickets/status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ token: authToken, id, status })
+            });
+            loadTickets();
+        }
+    </script>
+</body>
+</html>

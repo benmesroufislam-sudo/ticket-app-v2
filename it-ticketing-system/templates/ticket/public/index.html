@@ -3,82 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الدعم الفني وتذاكر IT</title>
+    <title>إرسال تذكرة دعم فني - القرية المتوسطية</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
-        /* ضمان ظهور نصوص الجدول باللون الأسود الغامق */
-        #ticketsTable td {
-            color: #000000 !important;
-            font-weight: 600;
-        }
-    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col justify-between">
 
     <!-- الهيدر الرسمي -->
-    <header class="bg-slate-900 text-white shadow-lg border-b border-slate-700">
-        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-2">
-            <div class="text-center md:text-right">
-                <h1 class="text-lg md:text-xl font-bold tracking-wide text-amber-400">
-                    المؤسسة العمومية لتسيير القرية المتوسطية
-                </h1>
-                <p class="text-xs md:text-sm text-slate-300">نظام الدعم الفني وتذاكر IT</p>
-            </div>
-            <div class="text-center md:text-left bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                <span class="text-xs text-slate-400 block">إشراف وتطوير المهندس:</span>
-                <span class="text-sm font-semibold text-sky-400 tracking-wider">BENMESROUF ISLAM</span>
-            </div>
-        </div>
+    <header class="bg-slate-900 text-white shadow-lg border-b border-slate-700 py-4 px-6 text-center">
+        <h1 class="text-xl font-bold text-amber-400">المؤسسة العمومية لتسيير القرية المتوسطية</h1>
+        <p class="text-xs text-slate-300 mt-1">نظام الدعم الفني وتذاكر IT</p>
     </header>
 
-    <!-- المحتوى الرئيسي -->
-    <main class="container mx-auto px-4 py-6">
-        
-        <!-- زر فتح نافذة تذكرة جديدة -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg md:text-2xl font-bold text-slate-900">سجل التذاكر</h2>
-            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition duration-200 text-sm md:text-base">
-                + تذكرة جديدة
-            </button>
-        </div>
-
-        <!-- جدول التذاكر متجاوب مع الهواتف -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-            <table class="w-full text-right border-collapse min-w-[600px]" id="ticketsTable">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs md:text-sm">
-                        <th class="p-3">المُرسِل (الاسم والمصلحة)</th>
-                        <th class="p-3">العنوان / الفئة</th>
-                        <th class="p-3">الأولوية</th>
-                        <th class="p-3">الحالة</th>
-                        <th class="p-3">تاريخ الإنشاء</th>
-                    </tr>
-                </thead>
-                <tbody id="ticketsTableBody">
-                    <!-- يتم تحميل التذاكر ديناميكياً هنا -->
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-    <!-- نافذة إنشاء تذكرة جديدة (Modal) -->
-    <div id="ticketModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-            <h3 class="text-xl font-bold mb-4 text-slate-900 border-b pb-2">إنشاء تذكرة دعم فني</h3>
+    <!-- نموذج الإرسال -->
+    <main class="container mx-auto px-4 py-8 max-w-lg">
+        <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 text-slate-800 border-b pb-2 text-center">فتح تذكرة دعم جديدة</h2>
             
-            <form id="ticketForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                
-                <!-- اسم الموظف (إجباري) -->
+            <form id="employeeForm" onsubmit="submitTicket(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">اسم الموظف <span class="text-red-500">*</span></label>
-                    <input type="text" id="employee_name" required placeholder="أدخل اسمك الكامل" class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="employee_name" required placeholder="أدخل اسمك الكامل" class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500">
                 </div>
 
-                <!-- المصلحة (إجباري) -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">المصلحة / القسم <span class="text-red-500">*</span></label>
-                    <select id="department" required class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="department" required class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500">
                         <option value="">-- اختر المصلحة --</option>
                         <option value="مصلحة الإعلام الآلي والشبكات">مصلحة الإعلام الآلي والشبكات</option>
                         <option value="مصلحة الوسائل العامة">مصلحة الوسائل العامة</option>
@@ -88,110 +37,55 @@
                     </select>
                 </div>
 
-                <!-- عنوان التذكرة -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">عنوان المشكلة <span class="text-red-500">*</span></label>
-                    <input type="text" id="title" required placeholder="وصف قصير للمشكلة" class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">وصف المشكلة <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required placeholder="اكتب عنواناً شاملاً للمشكلة" class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500">
                 </div>
 
-                <!-- الأولوية -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">درجة الأولوية</label>
-                    <select id="priority" class="w-full border border-slate-300 rounded-lg p-2.5 text-black focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="priority" class="w-full border border-slate-300 rounded-lg p-2.5 text-black">
                         <option value="P3">عادية (P3)</option>
                         <option value="P2">متوسطة (P2)</option>
                         <option value="P1">عاجلة جداً (P1)</option>
                     </select>
                 </div>
 
-                <!-- أزرار الإجراءات -->
-                <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300">إلغاء</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">إرسال التذكرة</button>
-                </div>
+                <button type="submit" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
+                    إرسال التذكرة إلى قسم IT
+                </button>
             </form>
+
+            <div id="successMsg" class="hidden mt-4 p-4 bg-green-100 text-green-800 rounded-lg text-center font-bold">
+                تم إرسال تذكرتك بنجاح! سيتم معالجتها من طرف فريق الإعلام الآلي.
+            </div>
         </div>
-    </div>
+    </main>
 
-    <!-- كود الربط والتفاعل مع API -->
+    <footer class="text-center py-4 text-xs text-slate-500">
+        إشراف وتطوير المهندس: <span class="font-bold text-slate-700">BENMESROUF ISLAM</span>
+    </footer>
+
     <script>
-        function openModal() {
-            document.getElementById('ticketModal').classList.remove('hidden');
-            document.getElementById('ticketModal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('ticketModal').classList.add('hidden');
-            document.getElementById('ticketModal').classList.remove('flex');
-            document.getElementById('ticketForm').reset();
-        }
-
-        // جلب وتحديث قائمة التذاكر
-        async function fetchTickets() {
-            try {
-                const response = await fetch('/api/tickets');
-                const tickets = await response.json();
-                const tbody = document.getElementById('ticketsTableBody');
-                tbody.innerHTML = '';
-
-                tickets.forEach(ticket => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-slate-200 hover:bg-slate-50 transition';
-                    row.innerHTML = `
-                        <td class="p-3 text-black font-bold">${ticket.created_by}</td>
-                        <td class="p-3 text-slate-800">${ticket.title}</td>
-                        <td class="p-3"><span class="px-2 py-1 text-xs rounded bg-slate-200 font-semibold">${ticket.priority}</span></td>
-                        <td class="p-3"><span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-medium">${ticket.status || 'جديدة'}</span></td>
-                        <td class="p-3 text-xs text-slate-500">${ticket.created_at || 'الآن'}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error('خطأ في جلب البيانات:', err);
-            }
-        }
-
-        // إرسال التذكرة بعد التحقق من البيانات
-        async function handleFormSubmit(e) {
+        async function submitTicket(e) {
             e.preventDefault();
-
             const name = document.getElementById('employee_name').value.trim();
             const dept = document.getElementById('department').value;
             const title = document.getElementById('title').value.trim();
             const priority = document.getElementById('priority').value;
 
-            // شرط إضافي لضمان عدم فتح التذكرة إلا بملء البيانات
-            if (!name || !dept || !title) {
-                alert('يرجى ملا جميع الحقول المطلوبة بما فيها الاسم والمصلحة!');
-                return;
-            }
+            const res = await fetch('/api/tickets', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ created_by: `${name} - ${dept}`, title, priority })
+            });
 
-            const ticketData = {
-                created_by: `${name} - ${dept}`,
-                title: title,
-                priority: priority
-            };
-
-            try {
-                const response = await fetch('/api/tickets', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(ticketData)
-                });
-
-                if (response.ok) {
-                    closeModal();
-                    fetchTickets();
-                } else {
-                    alert('حدث خطأ أثناء إرسال التذكرة');
-                }
-            } catch (err) {
-                console.error('خطأ في الشبكة:', err);
+            if (res.ok) {
+                document.getElementById('employeeForm').reset();
+                document.getElementById('successMsg').classList.remove('hidden');
+                setTimeout(() => document.getElementById('successMsg').classList.add('hidden'), 5000);
             }
         }
-
-        // جلب البيانات عند تحميل الصفحة
-        fetchTickets();
     </script>
 </body>
 </html>
