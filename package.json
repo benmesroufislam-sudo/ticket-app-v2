@@ -19,6 +19,10 @@
   },
   "homepage": "https://github.com/benmesroufislam-sudo/ticket-app-v2#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "body-parser": "^2.3.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.6",
+    "express": "^5.2.1",
+    "pg": "^8.23.1"
   }
 }
